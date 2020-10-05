@@ -8,7 +8,7 @@ namespace Project_FinchControl
 
     // #==========================================================#
     // 
-    //  Title: Finch Control 
+    //  Title: Finch Control
     //  Description: Sprint one in the Finch series of missions. 
     //               Menu, continue, opening, closing, and 
     //               validation screens. Methods for the rest
