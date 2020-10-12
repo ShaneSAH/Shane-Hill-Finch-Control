@@ -621,7 +621,7 @@ namespace Project_FinchControl
         /// #=========================================================#
         /// </summary>
         /// <param name="finchRobot">finch robot object</param>
-        /// <returns>notify if the robot is connected</returns>
+        /// <returns>Get Number of user Data Points</returns>
         static int DataRecorderDisplayGetNumberOfDataPoints()
         {
             int numberOfDataPoints;
@@ -638,6 +638,9 @@ namespace Project_FinchControl
                 Console.WriteLine("\tIs this the correct amount? [yes or no]");
                 dataPointsResponse = Console.ReadLine().ToLower();
 
+                //
+                //Validation Process - User Confirmation
+                //
                 switch (dataPointsResponse)
                 {
                     case "yes":
@@ -659,7 +662,6 @@ namespace Project_FinchControl
 
             return numberOfDataPoints;
         }
-        //}
 
         /// <summary>
         /// #=======================================================================#
@@ -667,7 +669,7 @@ namespace Project_FinchControl
         /// #=======================================================================#
         /// </summary>
         /// <param name="finchRobot">finch robot object</param>
-        /// <returns>notify if the robot is connected</returns>
+        /// <returns>Get Frequency of Data Points from User</returns>
         static double DataRecorderDisplayGetFrequencyOfDataPoints()
         {
             double frequencyOfDataPoints;
@@ -684,6 +686,9 @@ namespace Project_FinchControl
                 Console.WriteLine("\tIs this the correct amount? [yes or no]");
                 frequencyDataPointsResponse = Console.ReadLine().ToLower();
 
+                //
+                //Validation Process - User Confirmation
+                //
                 switch (frequencyDataPointsResponse)
                 {
                     case "yes":
@@ -712,7 +717,7 @@ namespace Project_FinchControl
         /// #========================================================#
         /// </summary>
         /// <param name="finchRobot">finch robot object</param>
-        /// <returns>notify if the robot is connected</returns>
+        /// <returns>Get Temperature Data from user</returns>
         static double[] DataRecorderDisplayGetDataSet(int numberOfDataPoints, double frequencyOfDataPointsSeconds, Finch finchRobot)
         {
             double[] temperatures = new double[numberOfDataPoints];
@@ -725,6 +730,9 @@ namespace Project_FinchControl
             Console.WriteLine("The Finch Robot is ready to record the temperature data. Press any key to begin.");
             Console.ReadKey();
 
+            //
+            //Begins temperature sensor recording
+            //
             double temperature;
             int frequencyOfDataPointsMilliseconds;
             for (int index = 0; index < numberOfDataPoints; index++)
@@ -737,6 +745,10 @@ namespace Project_FinchControl
                 frequencyOfDataPointsMilliseconds = (int)(frequencyOfDataPointsSeconds * 1000);
                 finchRobot.wait(frequencyOfDataPointsMilliseconds);
             }
+
+            //
+            //LED off, sorts array for table display, notifies user data collection complete
+            //
             finchRobot.setLED(0, 0, 0);
             Array.Sort(temperatures);
             Console.WriteLine("Temperature Data Collection complete.");
@@ -750,7 +762,7 @@ namespace Project_FinchControl
         /// #=======================================================#
         /// </summary>
         /// <param name="finchRobot">finch robot object</param>
-        /// <returns>notify if the robot is connected</returns>
+        /// <returns>Get light data from user</returns>
         static double[] DataRecorderDisplayGetLightData(int numberOfDataPoints, double frequencyOfDataPointsSeconds, Finch finchRobot)
         {
 
@@ -765,6 +777,10 @@ namespace Project_FinchControl
             Console.WriteLine($"\tFrequency of Data Points {frequencyOfDataPointsSeconds}");
             Console.WriteLine();
             Console.WriteLine("The Finch Robot will now collect the first set of light data. Please place Finch in lighted area.");
+
+            //
+            //Begins Light Data Recording
+            //
             for (int index = 0; index < numberOfDataPoints; index++)
             {
                 leftLightLevel = finchRobot.getLeftLightSensor();
@@ -775,6 +791,9 @@ namespace Project_FinchControl
                 frequencyOfDataPointsMilliseconds = (int)(frequencyOfDataPointsSeconds * 1000);
                 finchRobot.wait(frequencyOfDataPointsMilliseconds);
             }
+            //
+            //LED off, sorts results for array table display, and notifies user collection complete. 
+            //
             finchRobot.setLED(0, 0, 0);
             Array.Sort(lightAverage);
             Console.WriteLine("Light Data Collection complete.");
@@ -789,9 +808,13 @@ namespace Project_FinchControl
         /// #=======================================================#
         /// </summary>
         /// <param name="finchRobot">finch robot object</param>
-        /// <returns>notify if the robot is connected</returns>
+        /// <returns>Display Data points</returns>
         static void DataRecorderDisplayGetDataSet(double[] temperatures, double[] lightAverage)
         {
+
+            //
+            //Calls DisplayDataTable method
+            //
             if (temperatures != null && lightAverage != null)
             {
                 DisplayScreenHeader("Data Set");
@@ -816,10 +839,12 @@ namespace Project_FinchControl
         /// #===========================================================#
         /// </summary>
         /// <param name="finchRobot">finch robot object</param>
-        /// <returns>notify if the robot is connected</returns>
+        /// <returns>Display Farenheit conversion</returns>
         static void ConvertCelsiusToFahrenheit(double[] temperatures)
         {
-
+            //
+            //Displays celsius to fahrenheit conversion 
+            //
             DisplayScreenHeader("\tFahrenheit Temperature Display");
 
             double fahrenheit;
@@ -849,7 +874,7 @@ namespace Project_FinchControl
         /// #==================================================#
         /// </summary>
         /// <param name="finchRobot">finch robot object</param>
-        /// <returns>notify if the robot is connected</returns>
+        /// <returns>Display Data table</returns>
         static void DataRecorderDisplayDataTable(double[] temperatures, double[] lightAverage)
         {
             DisplayScreenHeader("Data Table - Light and Temperature in Celsius");
