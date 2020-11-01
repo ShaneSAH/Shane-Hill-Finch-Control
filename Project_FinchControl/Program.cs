@@ -14,8 +14,9 @@ namespace Project_FinchControl
     //  Title: Finch Control
     //  Description: Sprint four in the Finch series of missions. 
     //               User Programming - Validation, methods,  
-    //               enum, user selects Finch commands from enum command list
-    //               method displays commands, and a method/Finch executes commands. 
+    //               enum, user selects Finch commands from 
+    //               enum command list method displays commands, 
+    //               and a method/Finch executes commands. 
     //  Application Type: Console
     //  Author: Hill, Shane
     //  Dated Created: 9/28/2020
