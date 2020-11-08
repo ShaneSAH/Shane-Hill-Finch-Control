@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text.RegularExpressions;
 using FinchAPI;
@@ -55,6 +57,8 @@ namespace Project_FinchControl
         {
             SetTheme();
 
+            DisplayLoginRegister();
+
             DisplayWelcomeScreen();
             DisplayMenuScreen();
             DisplayClosingScreen();
@@ -68,6 +72,259 @@ namespace Project_FinchControl
             Console.ForegroundColor = ConsoleColor.Green;
             Console.BackgroundColor = ConsoleColor.Black;
         }
+
+        #region Login/Register
+        /// <summary>
+        /// #=======================================#
+        /// #           Password Menu Screen        #
+        /// #=======================================#
+        /// 
+        /// User must enter a register and/or enter a valid login before moving on past this screen. 
+        /// Added a simple switch/case validation.
+        /// </summary>
+        static void DisplayLoginRegister()
+        {
+            DisplayScreenHeader("Finch Login/Register Screen");
+            string userInput;
+            string dataPath = @"Data/Logins.txt";
+
+            Console.WriteLine("\tWelcome to the Finch Robot Login Screen. Please login or register to continue.\n");
+            Console.WriteLine("\ta) Login");
+            Console.WriteLine("\tb) Register");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\tc) Delete Registry File (Dev use Only. Will be removed in release 1.0 - Clears usernames/passwords)");
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            userInput = Console.ReadLine().ToLower();
+
+            switch (userInput)
+            {
+                case "a":
+                    DisplayLogin();
+                    break;
+
+                case "b":
+
+                    DisplayRegisterUser();
+                    DisplayLogin();
+                    break;
+
+                case "c":
+                    File.Delete(dataPath);
+                    break;
+
+                default:
+                    Console.WriteLine("\n\tUnrecognized entry. Please login or register [a, or b] to continue to the main program. ");
+                    DisplayContinuePrompt();
+                    DisplayLoginRegister();
+                    break;
+            }
+        }
+        /// <summary>
+        /// #==========================#
+        /// #        Login Screen      #      
+        /// #==========================#
+        /// 
+        /// Method that collects input from user and stores that input as usernmae, password in 
+        /// 'IsValidLoginInfo' method. 
+        /// </summary>
+        static void DisplayLogin()
+        {
+            string userName;
+            string password;
+            bool validLogin;
+
+            do
+            {
+                DisplayScreenHeader("Login");
+
+                Console.WriteLine();
+                Console.Write("\tEnter your user name:");
+                userName = Console.ReadLine();
+                Console.Write("\tEnter your password:");
+                password = Console.ReadLine();
+
+                validLogin = IsValidLoginInfo(userName, password);
+
+                Console.WriteLine();
+                if (validLogin)
+                {
+                    Console.WriteLine("\tYou are now logged in.");
+                }
+                else
+                {
+                    Console.WriteLine("\tIt appears either the user name or password is incorrect.");
+                    Console.Write("\tPlease press enter to try login again or type '");
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Console.Write("quit");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("' to go back to the register screen:");
+                    //
+                    //If user inputs 'quit' this if statement will display the starting login/register screen and break user out of the login loop. 
+                    //
+                    if (Console.ReadLine().ToLower() == "quit")
+                    {
+                        DisplayLoginRegister();
+                        break;
+                    }
+                }
+                DisplayContinuePrompt();
+            } while (!validLogin);
+        }
+        /// <summary>
+        /// =================
+        /// check user login
+        /// =================
+        /// </summary>
+        /// <param name="userName">user name entered</param>
+        /// <param name="password">password entered</param>
+        /// <returns>true if valid user</returns>
+        static bool IsValidLoginInfo(string userName, string password)
+        {
+            List<(string userName, string password)> registeredUserLoginInfo = new List<(string userName, string password)>();
+            bool validUser = false;
+
+            registeredUserLoginInfo = ReadLoginInfoData();
+
+            //
+            // loop through the list of registered user login tuples and check each one against the login info
+            //
+            foreach ((string userName, string password) userLoginInfo in registeredUserLoginInfo)
+            {
+                if ((userLoginInfo.userName == userName) && (userLoginInfo.password == password))
+                {
+                    validUser = true;
+                    break;
+                }
+            }
+
+            return validUser;
+        }
+        /// <summary>
+        /// #=================================#
+        /// #        Register Screen          #
+        /// #=================================#
+        /// write login info to data file and validates length and upper/lower case requirements for password. 
+        /// </summary>
+        static void DisplayRegisterUser()
+        {
+            string userName;
+            bool validResponse;
+            string password;
+            //string password;
+
+            DisplayScreenHeader("Register");
+
+            Console.Write("\tEnter your user name:");
+            userName = Console.ReadLine();
+
+            do
+            {
+                validResponse = true;
+                DisplayScreenHeader("Register");
+
+                Console.WriteLine("\tPassword Requirements: 8-15 characters, at least one uppercase and lowercase letter.\n");
+                Console.WriteLine("\tPlease enter password now:");
+                password = Console.ReadLine();
+                if (!((password.Length >= 8) && (password.Length <= 15)))
+                {
+                    Console.WriteLine("Please enter a password that is between 8-15 characters.");
+                    validResponse = false;
+                    DisplayContinuePrompt();
+                }
+                if (password.Contains(" "))
+                {
+                    Console.WriteLine("Please enter a password that is between 8-15 characters.");
+                    validResponse = false;
+                    DisplayContinuePrompt();
+                }
+                if (!password.Any(char.IsUpper))
+                {
+                    Console.WriteLine("Please enter a password that contains at least one uppercase letter.");
+                    validResponse = false;
+                    DisplayContinuePrompt();
+                }
+                if (!password.Any(char.IsLower))
+                {
+                    Console.WriteLine("Please enter a password that contains at least one lowercase letter.");
+                    validResponse = false;
+                    DisplayContinuePrompt();
+                }
+
+            } while (!validResponse);
+
+            WriteLoginInfoData(userName, password);
+
+            Console.WriteLine();
+            Console.WriteLine("\tYou entered the following username and password which will be saved to the registry.");
+            Console.Write("\tUser name: ");
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write($"{userName}\n\t");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("Password:");
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write($"{password}\n");
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            DisplayContinuePrompt();
+        }
+
+        /// <summary>
+        /// ===============================
+        /// read login info from data file
+        /// ===============================
+        /// </summary>
+        /// <returns>list of tuple of user name and password</returns>
+        static List<(string userName, string password)> ReadLoginInfoData()
+        {
+            string dataPath = @"Data/Logins.txt";
+
+            string[] loginInfoArray;
+            (string userName, string password) loginInfoTuple;
+
+            List<(string userName, string password)> registeredUserLoginInfo = new List<(string userName, string password)>();
+
+            loginInfoArray = File.ReadAllLines(dataPath);
+
+            //
+            // loop through the array
+            // split the user name and password into a tuple
+            // add the tuple to the list
+            //
+            foreach (string loginInfoText in loginInfoArray)
+            {
+                //
+                // use the Split method to separate the user name and password into an array
+                //
+                loginInfoArray = loginInfoText.Split(',');
+
+                loginInfoTuple.userName = loginInfoArray[0];
+                loginInfoTuple.password = loginInfoArray[1];
+
+                registeredUserLoginInfo.Add(loginInfoTuple);
+
+            }
+
+            return registeredUserLoginInfo;
+        }
+
+        /// <summary>
+        /// Writes login information to data file. Added "\n" in order to create multiple username/password lines. 
+        /// Note: no error or validation checking
+        /// </summary>
+        static void WriteLoginInfoData(string userName, string password)
+        {
+            string dataPath = @"Data/Logins.txt";
+            string loginInfoText;
+
+            loginInfoText = userName + "," + password;
+
+            //
+            // use the AppendAllText method to not overwrite the existing logins
+            //
+            File.AppendAllText(dataPath, loginInfoText + "\n");
+        }
+        #endregion
 
         /// <summary>
         /// #===========================================#
@@ -1955,10 +2212,10 @@ namespace Project_FinchControl
                         finchRobot.wait(waitMilliseconds);
                         break;
 
-                        //Provided a timed/speed override for the turn command. This works better turning the robot instead of relying on the user input wait
-                        //command which turns the Finch beyond a left or right in most cases, almost doing a 360 or more. Same goes for motor speed. 255 would
-                        //have the Finch doing donuts, not turning. Stop motors is used at the end of the command to complete the turn. 
-                        //
+                    //Provided a timed/speed override for the turn command. This works better turning the robot instead of relying on the user input wait
+                    //command which turns the Finch beyond a left or right in most cases, almost doing a 360 or more. Same goes for motor speed. 255 would
+                    //have the Finch doing donuts, not turning. Stop motors is used at the end of the command to complete the turn. 
+                    //
                     case Command.TURNRIGHT:
                         finchRobot.setMotors(160, 0);
                         finchRobot.wait(1500);
@@ -1970,9 +2227,9 @@ namespace Project_FinchControl
                         finchRobot.wait(1500);
                         finchRobot.setMotors(0, 0);
                         break;
- 
+
                     case Command.LEDON:
-                        finchRobot.setLED(commandParameter.ledBrightness, commandParameter.ledBrightness,commandParameter.ledBrightness);
+                        finchRobot.setLED(commandParameter.ledBrightness, commandParameter.ledBrightness, commandParameter.ledBrightness);
                         break;
 
                     case Command.LEDOFF:
@@ -2250,7 +2507,7 @@ namespace Project_FinchControl
                     //
                     //user entered invalid command
                     //
-                    if (!Enum.TryParse(userResponse, out command))
+                    if (!Enum.TryParse(userResponse, out command) || int.TryParse(userResponse, out int number))
                     {
                         Console.WriteLine();
                         Console.WriteLine("\tPlease enter a proper command.");
